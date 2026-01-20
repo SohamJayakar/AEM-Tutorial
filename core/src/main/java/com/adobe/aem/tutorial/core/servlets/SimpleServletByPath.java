@@ -24,12 +24,11 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.servlets.annotations.SlingServletPaths;
 import org.apache.sling.servlets.annotations.SlingServletResourceTypes;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.propertytypes.ServiceDescription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -42,29 +41,23 @@ import java.io.IOException;
  * idempotent. For write operations use the {@link SlingAllMethodsServlet}.
  */
 @Component(service = { Servlet.class })
-@SlingServletResourceTypes(
-        resourceTypes="practice/components/page",
-        selectors="aem-tutorial",
-        methods=HttpConstants.METHOD_GET,
-        extensions="txt")
+@SlingServletPaths(
+        value= {"/bin/aem-tutorial", "/aem/tutorial"}
+)
 @ServiceDescription("Simple Demo Servlet")
-public class SimpleServlet extends SlingSafeMethodsServlet {
+public class SimpleServletByPath extends SlingSafeMethodsServlet {
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleServlet.class);
-
     @Override
     protected void doGet(final SlingHttpServletRequest req,
             final SlingHttpServletResponse resp) throws ServletException, IOException {
                 ResourceResolver resolver = req.getResourceResolver();
         final Resource resource = req.getResource();
-        log.info("Resource Object = " + resource);
         resp.setContentType("text/plain");
-        resp.getWriter().write("Title = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
-        log.info("Debugging the response = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
+        resp.getWriter().write("Servlet by Path Example");
     }
 }

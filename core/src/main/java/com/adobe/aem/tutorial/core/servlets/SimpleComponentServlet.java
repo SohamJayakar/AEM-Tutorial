@@ -28,9 +28,9 @@ import org.apache.sling.servlets.annotations.SlingServletResourceTypes;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.propertytypes.ServiceDescription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.jcr.Node;
+import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -43,28 +43,27 @@ import java.io.IOException;
  */
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
-        resourceTypes="practice/components/page",
-        selectors="aem-tutorial",
-        methods=HttpConstants.METHOD_GET,
-        extensions="txt")
+        resourceTypes="practice/components/servletcomponent",
+        selectors="buttoncomponent",
+        methods=HttpConstants.METHOD_POST)
 @ServiceDescription("Simple Demo Servlet")
-public class SimpleServlet extends SlingSafeMethodsServlet {
-
-    @Reference
-    private ResourceResolverFactory resourceResolverFactory;
+public class SimpleComponentServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleServlet.class);
-
     @Override
-    protected void doGet(final SlingHttpServletRequest req,
+    protected void doPost(final SlingHttpServletRequest req,
             final SlingHttpServletResponse resp) throws ServletException, IOException {
-                ResourceResolver resolver = req.getResourceResolver();
         final Resource resource = req.getResource();
-        log.info("Resource Object = " + resource);
-        resp.setContentType("text/plain");
-        resp.getWriter().write("Title = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
-        log.info("Debugging the response = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
+        ResourceResolver resolver = req.getResourceResolver();
+        Session session = resolver.adaptTo(Session.class);
+        try{
+            Node node = session.getNode(resource.getPath());
+            resp.setContentType("text/plain");
+            resp.getWriter().write("Header value = " + node.getProperty("header").getString());
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }

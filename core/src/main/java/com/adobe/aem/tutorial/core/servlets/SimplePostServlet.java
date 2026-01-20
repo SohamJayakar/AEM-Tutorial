@@ -28,8 +28,6 @@ import org.apache.sling.servlets.annotations.SlingServletResourceTypes;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.propertytypes.ServiceDescription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -44,27 +42,22 @@ import java.io.IOException;
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
         resourceTypes="practice/components/page",
-        selectors="aem-tutorial",
-        methods=HttpConstants.METHOD_GET,
+        selectors="aem-tutorial-post",
+        methods=HttpConstants.METHOD_POST,
         extensions="txt")
 @ServiceDescription("Simple Demo Servlet")
-public class SimpleServlet extends SlingSafeMethodsServlet {
+public class SimplePostServlet extends SlingAllMethodsServlet {
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleServlet.class);
-
     @Override
-    protected void doGet(final SlingHttpServletRequest req,
+    protected void doPost(final SlingHttpServletRequest req,
             final SlingHttpServletResponse resp) throws ServletException, IOException {
-                ResourceResolver resolver = req.getResourceResolver();
         final Resource resource = req.getResource();
-        log.info("Resource Object = " + resource);
         resp.setContentType("text/plain");
-        resp.getWriter().write("Title = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
-        log.info("Debugging the response = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
+        resp.getWriter().write("Title from Post Servlet = " + resource.getValueMap().get(JcrConstants.JCR_TITLE));
     }
 }
