@@ -16,6 +16,14 @@
 package com.adobe.aem.tutorial.core.servlets;
 
 import com.day.cq.commons.jcr.JcrConstants;
+import com.day.cq.search.PredicateGroup;
+import com.day.cq.search.Query;
+import com.day.cq.search.QueryBuilder;
+import com.day.cq.search.result.Hit;
+import com.day.cq.search.result.SearchResult;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -34,6 +42,9 @@ import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Servlet that writes some sample content into the response. It is mounted for
@@ -43,28 +54,47 @@ import java.io.IOException;
  */
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
-        resourceTypes="practice/components/servletcomponent",
-        selectors="buttoncomponent",
-        methods=HttpConstants.METHOD_GET)
+        resourceTypes="practice/components/page",
+        selectors="query-builder",
+        methods=HttpConstants.METHOD_POST)
 @ServiceDescription("Simple Demo Servlet")
-public class SimpleComponentServlet extends SlingAllMethodsServlet {
+public class QueryBuilderServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    protected void doGet(final SlingHttpServletRequest req,
+    protected void doPost(final SlingHttpServletRequest req,
             final SlingHttpServletResponse resp) throws ServletException, IOException {
         final Resource resource = req.getResource();
-        String statusFlag = req.getParameter("statusFlag");
         ResourceResolver resolver = req.getResourceResolver();
         Session session = resolver.adaptTo(Session.class);
         try{
-            Node node = session.getNode(resource.getPath());
-            resp.setContentType("text/plain");
-            resp.getWriter().write("Status Flag = " + statusFlag);
+            JsonArray resultsArray = new JsonArray();
+            Map<String, String> map = new HashMap<>();
+            map.put("type", "cq:Page");
+            map.put("path", "/content/practice/us/en");
+            map.put("p.limit", "-1");
+            map.put("property", "jcr:content/cq:template");
+            map.put("property.value", "/conf/practice/settings/wcm/templates/tutorial-template");
+            QueryBuilder queryBuilder = resolver.adaptTo(QueryBuilder.class);
+            Query query = queryBuilder.createQuery(PredicateGroup.create(map), session);
+            SearchResult searchResult = query.getResult();
+            List<Hit> hits = searchResult.getHits();
+            for(Hit hit : hits){
+                JsonObject pageObj = new JsonObject();
+                pageObj.addProperty("path", hit.getPath());
+                resultsArray.add(pageObj);
+            }
+            resp.setContentType("application/json");
+            resp.getWriter().write(resultsArray.toString());
         }
         catch(Exception e){
             e.printStackTrace();
+        }
+        finally {
+            if (session != null) {
+                session.logout();
+            }
         }
     }
 }

@@ -1,10 +1,13 @@
-function myButtonFunction() {
+function myButtonFunction(status) {
 	const servletResource = $(".my-button-component").data(
     "current-resource"
   );
       var settings = {
         url: servletResource + ".buttoncomponent.html",
-        method: "POST",
+        data: {
+          statusFlag : status,
+        },
+        method: "GET",
       };
       $.ajax(settings)
         .done(function (response) {
